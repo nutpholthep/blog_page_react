@@ -25,6 +25,7 @@ function Register() {
             placeholder="Email"
             value={userData.email}
             onChange={changeInputHandle}
+            autoFocus
           />
           <input
             type="password"
