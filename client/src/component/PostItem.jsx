@@ -2,7 +2,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import PostAuthor from "./PostAuthor";
-// eslint-disable-next-line react/prop-types
 function PostItem({ postId, category, thumbnail, authorID, desc, title }) {
   const shortDese = desc.length > 145 ? desc.substr(0, 145) + "..." : desc;
   const postTitle = title.length > 30 ? title.substr(0, 30) + "..." : title;
