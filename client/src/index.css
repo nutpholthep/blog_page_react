@@ -325,7 +325,7 @@ textarea {
 
 .register,
 .login,
-.create_post {
+.create-post {
   width: var(--form-width);
   margin-inline: auto;
   height: calc(100vh - 12rem);
@@ -335,7 +335,7 @@ textarea {
 
 .register h2,
 .login h2,
-.create_post h2 {
+.create-post h2 {
   margin-bottom: 2rem;
 }
 .register small,
@@ -475,4 +475,12 @@ textarea {
 .dashboard__post-action {
   display: flex;
   gap: 1rem;
+}
+
+
+/*=========== Create Post=======     */
+.q-editor{
+  background-color: var(--color-white);
+  height: 8rem;
+  overflow: scroll;
 }
