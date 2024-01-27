@@ -6,7 +6,7 @@ function Posts() {
   const [posts, setPosts] = useState(DUMMY_POSTS);
   return (
     <section className="posts">
-    {posts.length > 0 ?  <div className="container post__container">
+    {posts.length > 0 ?  <div className="container posts__container">
       {posts.map(({ id, category, thumbnail, authorID, desc ,title}) => (
         <PostItem
           key={id}
