@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"
+import "react-quill/dist/quill.snow.css";
+
 function CreatePosts() {
   const [title,setTitle] = useState('')
   const [category,setCategory] = useState('Uncategorized')
@@ -10,7 +11,7 @@ function CreatePosts() {
 const modules ={
   toolbar:[
     [{'header':[1,2,3,4,5,6,false]}],
-    ["bold","italic","underline","strike","blackquote"],
+    ["bold","italic","underline","strike","blockquote"],
     [{"list":"ordered"},{"list":"bullet"},{"indent":"-1"},{"indent":"+1"}],
     ["link","image"],
     ["clean"]
@@ -19,7 +20,7 @@ const modules ={
 
 const format = [
   "header",
-  "bold","italic","underline","strike","blackquote"
+  "bold","italic","underline","strike","blockquote"
   ,"list","bullet","indent",
   "link","image"
 
@@ -37,9 +38,8 @@ const format = [
         <select name="category" id="" value={category} onChange={e=>setCategory(e.target.value)}>
         {POST_CATEGORY.map((category,index)=><option key={index}>{category}</option>)}
         </select>
-        <ReactQuill modules={modules} formats={format} value={description} onChange={setDescription} className='q-editor'/>
+        <ReactQuill modules={modules} formats={format} value={description} onChange={value => setDescription(value)} className='q-editor'/>
         <input type="file" name="thumbnail" id="" onChange={e=>setThumbnail(e.target.files[0])} accept='png,jpg,jpeg'/>
-        <input type="text" placeholder='Title' value={title}/>
         <button className='btn primary'>Create</button>
       </form>
     </div>

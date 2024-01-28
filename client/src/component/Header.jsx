@@ -12,6 +12,7 @@ function Header() {
             setIsNavShowing(true)
         }
     }
+    console.log(isNavShowing);
   return (
     <nav>
         <div className="container nav__container">
