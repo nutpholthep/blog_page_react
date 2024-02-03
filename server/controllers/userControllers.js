@@ -1,8 +1,38 @@
+import User from "../models/userModel.js"
+import HttpError from "../models/errorModel.js"
+import bcrypts from "bcryptjs";
 // ============REGISTER A NEW USER
 // POST : api/user/register 
 // UNPROTECTED
 const resgisterUser = async (req, res, next) => {
-    res.json('Resgister USer')
+    try {
+        const { name, email, password, password2 } = req.body;
+        if (!name || !email || !password || !password) {
+            return next(new HttpError('Fill in all fields',422));
+        }
+        const newEmail = email.toLowerCase();
+        const emailExists = User.findOne({ email: newEmail });
+
+        if (emailExists) {
+            next(new HttpError('Email already exists'));
+        }
+
+        if ((password.trim().length) < 6){
+            return next(new HttpError ('Password should be least 6 characters.',422));
+        }
+
+        if(password !== password2){
+            return next(new HttpError('Password do not match.',422))
+        }
+
+        const salt = await bcrypts.genSalt(10);
+        const hashedPass = await bcrypts.hash(password,salt);
+        const newUser = await User.create({name,email:newEmail,password:hashedPass});
+
+        res.status(201).json(newUser);
+    } catch (error) {
+        return next(new HttpError('User registration failed', 422))
+    }
 }
 
 
