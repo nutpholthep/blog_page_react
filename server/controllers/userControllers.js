@@ -5,11 +5,18 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from "path";
 import { v4 as uuidv4, v4 } from "uuid";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { log } from "console";
+// import mv from 'express-fileupload';
+
+const __filename  = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ============REGISTER A NEW USER
 // POST : api/user/register 
 // UNPROTECTED
-const resgisterUser = async (req, res, next) => {
+async function resgisterUser(req, res, next) {
     try {
         const { name, email, password, password2 } = req.body;
         if (!name || !email || !password) {
@@ -28,7 +35,7 @@ const resgisterUser = async (req, res, next) => {
         }
 
         if (password !== password2) {
-            return next(new HttpError('Password do not match.', 422))
+            return next(new HttpError('Password do not match.', 422));
         }
 
         const salt = await bcrypts.genSalt(10);
@@ -37,7 +44,7 @@ const resgisterUser = async (req, res, next) => {
 
         res.status(201).json(newUser);
     } catch (error) {
-        return next(new HttpError('User registration failed', 422))
+        return next(new HttpError('User registration failed', 422));
     }
 }
 
@@ -80,6 +87,8 @@ const getUser = async (req, res, next) => {
         if (!user) {
             return next(new HttpError('User not found', 404));
         }
+        // console.log(__dirname);
+        // console.log(path.join(__dirname, '..','uploads', 'sadasd.png'));
         res.status(200).json(user);
 
     } catch (error) {
@@ -102,34 +111,40 @@ const changeAvatar = async (req, res, next) => {
 
         //delete old avatar if exists
         if (user.avatar) {
-            fs.unlink(path.join(__dirname, '..', 'uploads', user.avatar, (err) => {
+            fs.unlink(path.join(__dirname, '..', 'uploads', user.avatar), (err) => {
                 if (err) {
                     return next(new HttpError(err))
                 }
-            }))
+            })
         }
 
         const {avatar} = req.files;
-        if(avatar.size > 500000){
+        if(avatar.size > 50000000){
             return next(new HttpError('Profile picture too big. should be less than 500kb.',422))
         }
         let fileName;
         fileName = avatar.name;
         let splitedFileName = fileName.split('.');
-        console.log(splitedFileName);
-        let newFileName = splitedFileName[0] + v4() + '.' + splitedFileName[splitedFileName.length -1];
-        avatar.mv(path.join(__dirname+ '..'+'uploads'+ newFileName, async (err)=>{
+        // console.log(splitedFileName);
+
+        let newFileName = splitedFileName[0] + uuidv4() + '.' + splitedFileName[splitedFileName.length -1];
+        console.log(newFileName);
+        avatar.mv(path.join(__dirname, '..','uploads', newFileName), async (err)=>{
             if (err) {
-                return new HttpError(err)
+                return next(new HttpError(err))
+
             }
             const uploadedAvatar = await User.findByIdAndUpdate(req.user.id,{avatar:newFileName},{new:true});
 
             if (!uploadedAvatar) {
-                return new HttpError("Avatar couldn't be changed.",422)
+                return next(new HttpError("Avatar couldn't be changed.",422))
             }
-        }))
+            res.json(uploadedAvatar);
+        })
 
     } catch (error) {
+        // const {avatar}= req.files
+        // console.log(avatar);
         return next(new HttpError(error));
     }
 }
@@ -139,7 +154,33 @@ const changeAvatar = async (req, res, next) => {
 // POST : api/user/edit-user
 // PROTECTED
 const editUser = async (req, res, next) => {
-    res.json('Edit user Profile')
+    try {
+        const {name,email,currentPassword,newPassword,confirmPassword} = req.body;
+        if(!name || !email || !currentPassword || !newPassword){
+            return next(new HttpError('Fill in all fields'),422);
+        }
+        // get user from database
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return next(new HttpError('User not found',403));
+        }
+
+        //make sure new Email already exist
+        const emailExist = await User.findOne({email});
+        if (emailExist && (emailExist._id != user._id)) {
+            return next(new HttpError('Email already exist.',422))
+        }
+
+        //compare current password to DB
+        const validateUserPassword = bcrypts.compare(currentPassword,user.password);
+        if (!validateUserPassword) {
+            return next(new HttpError('Invalid current password',422));
+        }
+    } catch (error) {
+        return next(new HttpError(error))
+    }
+    
 }
 
 
