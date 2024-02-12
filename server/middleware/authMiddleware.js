@@ -10,7 +10,7 @@ const authMiddleware = async(req,res,next) =>{
                return next(new HttpError('Unauthorization invalid token.',403)) ;
             }
             req.user = info;
-            console.log(req.headers);
+            // console.log(req.headers);
             next()
         })
     }else{

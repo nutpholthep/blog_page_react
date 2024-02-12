@@ -18,7 +18,7 @@ app.use(express.json({extended:true}));
 app.use(express.urlencoded({extended:true}));
 app.use(cors({credential:true,origin:"http://loaclhost:3000"}));
 app.use(fileUpload());
-app.use('/upload',express.static(__dirname + '/uploads'));
+app.use('/uploads',express.static(__dirname + '/uploads'));
 
 app.use("/api/users",userRoutes);
 app.use("/api/posts",postRoutes);
