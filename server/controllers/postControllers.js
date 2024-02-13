@@ -1,6 +1,6 @@
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
-import {  v4 } from "uuid";
+import { v4 } from "uuid";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -57,8 +57,8 @@ const createPost = async (req, res, next) => {
 //UNPROTECTED
 const getPosts = async (req, res, next) => {
     try {
-       const posts = await Post.find().sort({updatedAt:-1}) ;
-       res.status(200).json(posts)
+        const posts = await Post.find().sort({ updatedAt: -1 });
+        res.status(200).json(posts)
     } catch (error) {
         return next(new HttpError(err))
     }
@@ -71,8 +71,8 @@ const getPost = async (req, res, next) => {
     try {
         const postId = req.params.id;
         const post = await Post.findById(postId);
-        if(!post){
-            return next(new HttpError("Post not Found",404));
+        if (!post) {
+            return next(new HttpError("Post not Found", 404));
         }
         res.status(200).json(post);
     } catch (err) {
@@ -84,21 +84,81 @@ const getPost = async (req, res, next) => {
 //GET:api/posts/categories/:category
 //UNPROTECTED
 const getCatPost = async (req, res, next) => {
-    res.json('get category post')
+    try {
+        const { category } = req.params;
+        const catPosts = await Post.find({ category }).sort({ createAt: -1 });
+        res.status(200).json(catPosts);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 /*======== GET USER/AUTHOR POST   =============*/
 //GET:api/posts/user/:id
 //UNPROTECTED
 const getUserPosts = async (req, res, next) => {
-    res.json('get user Post')
+    try {
+        const { id } = req.params;
+        const posts = await Post.find({ creator: id }).sort({ createAt: -1 });
+        res.status(200).json(posts);
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 /*======== EDIT POST   =============*/
 //PATCH:api/posts/:id
 //PROTECTED
 const editPost = async (req, res, next) => {
-    res.json('Edit Post')
+    try {
+        let fileName;
+        let newFileName;
+        let updatedPost;
+        const postId = req.params.id;
+        let { title, category, description } = req.body;
+
+        //React Quil has a paragraph opening and closing tag with a break tag in between so there are 11 characters in there already
+        if (!title || !category || description.length < 12) {
+            return next(new HttpError('Fill in all field', 422));
+        }
+        if (!req.files) {
+            updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description }, { new: true });
+        } else {
+            // get old post from database
+            const oldPost = await Post.findById(postId);
+
+            //delete old thumbnail from uploads
+            fs.unlink(path.join(__dirname, "..", "uploads", oldPost.thumbnail), async (err) => {
+                if (err) {
+                    next(new HttpError(err));
+                }   
+            });
+
+             //upload new thumbnaill to database
+             const { thumbnail } = req.files;
+             //check file size
+             if (thumbnail.size > 2000000) {
+                 return next(new HttpError("thumbnail  too big should be less than 2MB"))
+             }
+             fileName = thumbnail.name;
+             let splitedFileName = fileName.split(".")[0];
+             newFileName = splitedFileName + v4()  + "." + splitedFileName[splitedFileName.length -1];
+             thumbnail.mv(path.join(__dirname,"..","uploads",newFileName), async (err)=>{
+                 if (err) {
+                     return next(new HttpError(err));
+                 }
+                 updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description,thumbnail:newFileName }, { new: true });
+             });
+        }
+
+        if(!updatedPost){
+            return next(new HttpError("Couldn't be update post ",400))
+        }
+
+        res.status(200).json(updatedPost)
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 /*======== DELETE POST   =============*/
