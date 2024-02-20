@@ -121,39 +121,44 @@ const editPost = async (req, res, next) => {
         if (!title || !category || description.length < 12) {
             return next(new HttpError('Fill in all field', 422));
         }
-        if (!req.files) {
-            updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description }, { new: true });
-        } else {
-            // get old post from database
-            const oldPost = await Post.findById(postId);
+        // get old post from database
+        const oldPost = await Post.findById(postId);
+
+        if (req.user.id == oldPost.creator) {
+            if (!req.files) {
+                updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description }, { new: true });
+            } else{
 
             //delete old thumbnail from uploads
             fs.unlink(path.join(__dirname, "..", "uploads", oldPost.thumbnail), async (err) => {
                 if (err) {
                     next(new HttpError(err));
-                }   
+                }
             });
 
-             //upload new thumbnaill to database
-             const { thumbnail } = req.files;
-             //check file size
-             if (thumbnail.size > 2000000) {
-                 return next(new HttpError("thumbnail  too big should be less than 2MB"))
-             }
-             fileName = thumbnail.name;
-             let splitedFileName = fileName.split(".")[0];
-             newFileName = splitedFileName + v4()  + "." + splitedFileName[splitedFileName.length -1];
-             thumbnail.mv(path.join(__dirname,"..","uploads",newFileName), async (err)=>{
-                 if (err) {
-                     return next(new HttpError(err));
-                 }
-                 updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description,thumbnail:newFileName }, { new: true });
-             });
-        }
+            //upload new thumbnaill to database
+            const { thumbnail } = req.files;
+            //check file size
+            if (thumbnail.size > 2000000) {
+                return next(new HttpError("thumbnail  too big should be less than 2MB"))
+            }
+            fileName = thumbnail.name;
+            let splitedFileName = fileName.split(".")[0];
+            newFileName = splitedFileName + v4() + "." + splitedFileName[splitedFileName.length - 1];
+            thumbnail.mv(path.join(__dirname, "..", "uploads", newFileName), async (err) => {
+                if (err) {
+                    return next(new HttpError(err));
+                }
+                updatedPost = await Post.findByIdAndUpdate(postId, { title, category, description, thumbnail: newFileName }, { new: true });
+            });
 
-        if(!updatedPost){
-            return next(new HttpError("Couldn't be update post ",400))
+            if (!updatedPost) {
+                return next(new HttpError("Couldn't be update post ", 400))
+            }
         }
+    }else{
+        return next(new HttpError("Couldn't be update post ", 400))
+    }
 
         res.status(200).json(updatedPost)
     } catch (error) {
@@ -165,7 +170,31 @@ const editPost = async (req, res, next) => {
 //PATCH:api/posts/:id
 //PROTECTED
 const deletePost = async (req, res, next) => {
-    res.json('Delete Post')
+    try {
+        const postsId = req.params.id;
+        const post = await Post.findById(postsId);
+
+        const fileName = post?.thumbnail;
+        if (req.user.id == post.creator) {
+            fs.unlink(path.join(__dirname, "..", "uploads", fileName), async (err) => {
+                if (err) {
+                    return next(new HttpError(err))
+                } else {
+                    await Post.findByIdAndDelete(postsId);
+                    // find user and reduce post count by 1
+                    const currentUser = await User.findById(req.user.id);
+                    const userPostCount = currentUser?.post - 1
+                    await User.findByIdAndUpdate(req.user.id, { post: userPostCount });
+                }
+            });
+
+            res.json(`Post ${postsId} delete successfully`);
+        } else {
+            return next(new HttpError("Post couldn't be not delelted", 403))
+        }
+    } catch (error) {
+        return next(new HttpError(error))
+    }
 };
 
 export {
