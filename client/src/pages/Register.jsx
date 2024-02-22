@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
+import  { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 function Register() {
   const [userData, setUserData] = useState({
     name: "",
@@ -8,18 +8,37 @@ function Register() {
     password: "",
     password2: "",
   });
-  function changeInputHandle(e){
-    setUserData(preVal=>{
-     return {...preVal,[e.target.name]:e.target.value}
-    })
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  function changeInputHandle(e) {
+    setUserData((preVal) => {
+      return { ...preVal, [e.target.name]: e.target.value };
+    });
   }
-  console.log(userData);
+  async function registerUser(e) {
+    e.preventDefault();
+    setError("");
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_REACT_APP_BASE_URL}/users/register`,userData);
+      const newUser = await response.data;
+      // console.log(newUser);
+      if(!newUser){
+        setError("Cloudn't resgiset user try again");
+      }
+      navigate("/login");
+    } catch (err) {
+      setError(err.response.data.message);
+      console.log(err.code);
+    }
+  }
+  // console.log(userData);
   return (
     <section className="register">
       <div className="container">
         <h2>Sign Up</h2>
-        <form action="" className="form register__form">
-          <p className="form__error-message">This is error message</p>
+        <form action="" className="form register__form" onSubmit={registerUser}>
+          {error && <p className="form__error-message">{error}</p>}
           <input
             type="text"
             name="name"
@@ -54,7 +73,9 @@ function Register() {
           />
           <button className="btn primary">Register</button>
         </form>
-        <small>Already have an account ? <Link to={"/login"}>Sign in</Link></small>
+        <small>
+          Already have an account ? <Link to={"/login"}>Sign in</Link>
+        </small>
       </div>
     </section>
   );

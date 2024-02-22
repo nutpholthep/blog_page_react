@@ -6,7 +6,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import HttpError from "../models/errorModel.js";
-import { log } from "console";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 

@@ -16,7 +16,7 @@ const __dirname = dirname(__filename);
 
 app.use(express.json({extended:true}));
 app.use(express.urlencoded({extended:true}));
-app.use(cors({credential:true,origin:"http://loaclhost:3000"}));
+app.use(cors({credential:true,origin:"http://localhost:5173"}));
 app.use(fileUpload());
 app.use('/uploads',express.static(__dirname + '/uploads'));
 
@@ -26,5 +26,5 @@ app.use(notFound);
 app.use(errorHanddle);
 
 connect(process.env.MONGO_URI)
-.then(app.listen(process.env.PORT, () => console.log(`server is running on ${process.env.PORT}`)))
+.then(app.listen(process.env.PORT || 5000, () => console.log(`server is running on ${process.env.PORT}`)))
 .catch(error =>console.error(error));

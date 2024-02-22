@@ -24,10 +24,10 @@ async function resgisterUser(req, res, next) {
             return next(new HttpError('Fill in all fields', 422));
         }
         const newEmail = email.toLowerCase();
-        const emailExists = User.findOne({ email: newEmail });
+        const emailExists = await User.findOne({ email: newEmail });
 
         if (emailExists) {
-            next(new HttpError('Email already exists'));
+            return next(new HttpError('Email already exists'));
         }
 
         if ((password.trim().length) < 6) {
@@ -65,7 +65,7 @@ const loginUser = async (req, res, next) => {
         }
         const comparePass = await bcrypts.compare(password, user.password);
         if (!comparePass) {
-            return next(new HttpError('Invalid credentail', 422));
+            return next(new HttpError('Invalid credentail password', 422));
         }
         const { _id: id, name } = user;
         const token = jwt.sign({ id, name }, process.env.JWT_SECRET, { expiresIn: "1d" });
