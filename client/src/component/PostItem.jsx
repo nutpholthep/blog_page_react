@@ -19,7 +19,7 @@ function PostItem({
         <img
           src={`${
             import.meta.env.VITE_REACT_APP_BASE_ASSETS
-          }uploads/${thumbnail}`}
+          }/uploads/${thumbnail}`}
           alt={title}
         />
       </div>

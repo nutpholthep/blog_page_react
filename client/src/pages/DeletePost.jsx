@@ -1,7 +1,7 @@
 import {useEffect,useContext} from 'react'
 import { UserContext } from '../context/userContext';
 import { useNavigate } from 'react-router-dom';
-
+import { Link } from 'react-router-dom';
 function DeletePost() {
   const {currentUser} = useContext(UserContext);
   const token = currentUser?.id;
@@ -12,7 +12,7 @@ useEffect(()=>{
   }
 },[])
   return (
-    <div>DeletePost</div>
+    <Link className='btn sm danger'>Delete</Link>
   )
 }
 
